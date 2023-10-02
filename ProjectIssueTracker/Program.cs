@@ -1,7 +1,9 @@
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using ProjectIssueTracker.Authorization;
 using ProjectIssueTracker.Data;
 using ProjectIssueTracker.Mappings;
 using Swashbuckle.AspNetCore.Filters;
@@ -50,10 +52,22 @@ namespace ProjectIssueTracker
                     ClockSkew = TimeSpan.Zero
                 };
             });
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("ProjectOwnerPolicy", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.AddRequirements(new ProjectOwnershipRequirement());
+                });
+            });
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder => builder.WithOrigins("http://127.0.0.1:4200", "http://localhost:4200").AllowAnyMethod().AllowAnyHeader());
             });
+
+            builder.Services.AddScoped<IAuthorizationHandler, ProjectOwnershipAuthorization>();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
