@@ -30,14 +30,21 @@ namespace ProjectIssueTracker.Data
                 .HasForeignKey(i=>i.IssueId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Issue>()
+                .HasOne(i=>i.Creator)
+                .WithMany(c=>c.CreatedIssues)
+                .HasForeignKey(i=>i.CreatorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Project>()
                 .HasMany(p=>p.Collaborators)
                 .WithOne(pc=>pc.Project)
                 .HasForeignKey(pc=>pc.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<ProjectCollaborator>()
                 .HasKey(pc => new { pc.UserId, pc.ProjectId });
+                
 
             base.OnModelCreating(modelBuilder);
         }

@@ -6,11 +6,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjectIssueTracker.Data;
+using ProjectIssueTracker.Dtos;
+using ProjectIssueTracker.Dtos.RequestDtos;
 using ProjectIssueTracker.Models;
 
 namespace ProjectIssueTracker.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/issues")]
     [ApiController]
     public class IssuesController : ControllerBase
     {
@@ -20,6 +22,8 @@ namespace ProjectIssueTracker.Controllers
         {
             _context = context;
         }
+
+       // [HttpPost("projects/{projectId}")]
 
     }
 }

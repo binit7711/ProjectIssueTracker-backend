@@ -7,10 +7,9 @@ namespace ProjectIssueTracker.Models
     {
         [Key]
         public int Id { get; set; }
-        [Required]
         public string Name { get; set; } = string.Empty;
+        public string Description { get; set; }
         public int OwnerId { get; set; }
-        [JsonIgnore]
         public virtual User Owner{ get; set; }
         public virtual List<Issue> Issues { get; set;}
         public virtual List<ProjectCollaborator> Collaborators { get; set;}

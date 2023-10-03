@@ -61,8 +61,8 @@ namespace ProjectIssueTracker.Controllers
         [Authorize(Policy = "ProjectOwnerPolicy")]
         public IActionResult DeleteProjectForuser([FromRoute] int projectId)
         {
-
             var project = _context.Projects.FirstOrDefault(p => p.Id == projectId);
+
             if (project == null)
             {
                 return NotFound();
@@ -99,6 +99,7 @@ namespace ProjectIssueTracker.Controllers
             {
                 return BadRequest("User is already owner of the project");
             }
+
             if (project.Collaborators.Any(c => c.UserId == request.UserId))
             {
                 return BadRequest("User is already a collaborator on the project");
@@ -130,5 +131,30 @@ namespace ProjectIssueTracker.Controllers
             return Ok();
         }
 
+        [HttpPost("{projectId}/issues")]
+        public IActionResult CreateIssueForProject([FromBody]IssueCreateDto issue, [FromRoute] int projectId)
+        {
+            var project = _context.Projects
+                .Include(p=>p.Issues)
+                .Include(p=>p.Owner)
+                .FirstOrDefault(proj => proj.Id == projectId);
+
+            if(project == null)
+            {
+                return NotFound();
+            }
+
+            project.Issues.Add(new Issue { Title = issue.Title, Description = issue.Description,CreatorId = project.Owner.Id });
+
+            _context.SaveChanges();
+
+            var response = _mapper.Map<ProjectDto>(project);
+            return Ok(response);
+
+        }
+
+        //[HttpPut("{projectId}/issues")]
+        //[HttpGet("{projectId}/issues")]
+        //[HttpDelete("{projectId}/issues/{issueId}")]
     }
 }

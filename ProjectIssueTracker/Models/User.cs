@@ -7,12 +7,8 @@ namespace ProjectIssueTracker.Models
     {
         [Key]
         public int Id { get; set; }
-        [Required]
         public string Name { get; set; } = string.Empty;
-        [Required]
         public string Email { get; set; } = string.Empty;
-        [Required]
-        [JsonIgnore]
         public string Password { get; set; } = string.Empty;
         public virtual  List<Project> OwnedProjects { get; set; }
         public virtual  List<ProjectCollaborator> CollaborativeProjects { get; set; }

@@ -42,6 +42,11 @@ namespace ProjectIssueTracker.Controllers
         [HttpPost("register")]
         public IActionResult Register(UserRegistrationDto user)
         {
+            var foundUser = _context.Users.FirstOrDefault(u=>u.Email == user.Email);
+            if (foundUser !=null)
+            {
+                return BadRequest("User already has an account with the same email");
+            }
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(user.Password);
             var CreatedUser = new User
             {

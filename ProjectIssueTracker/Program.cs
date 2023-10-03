@@ -20,11 +20,11 @@ namespace ProjectIssueTracker
             // Add services to the container.
 
             var connectionString = builder.Configuration.GetConnectionString("ApiConnection");
-            // builder.Services.AddDbContext<ApiDBContext>(options => options.UseSqlServer(connectionString));
+            builder.Services.AddDbContext<ApiDBContext>(options => options.UseSqlServer(connectionString));
 
             builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 
-            builder.Services.AddDbContext<ApiDBContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection")));
+            //builder.Services.AddDbContext<ApiDBContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection")));
             builder.Services.AddControllers();
 
             builder.Services.AddSwaggerGen(options =>
