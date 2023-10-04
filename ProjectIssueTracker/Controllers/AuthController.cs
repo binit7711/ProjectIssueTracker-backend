@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ProjectIssueTracker.Data;
@@ -16,11 +17,13 @@ namespace ProjectIssueTracker.Controllers
     {
         private readonly ApiDBContext _context;
         private readonly IConfiguration _config;
+        private readonly IMapper _mapper;
 
-        public AuthController(ApiDBContext context, IConfiguration config)
+        public AuthController(ApiDBContext context, IConfiguration config,IMapper mapper)
         {
             _context = context;
             _config = config;
+            _mapper = mapper;
         }
         [HttpPost("login")]
         public IActionResult Login(UserLoginDto user)
@@ -31,12 +34,14 @@ namespace ProjectIssueTracker.Controllers
                 return NotFound("Credentials Incorrect");
             }
             var passwordMatch = BCrypt.Net.BCrypt.Verify(user.Password, foundUser.Password);
+
             if (!passwordMatch)
             {
                 return NotFound("Credentials Incorrect");
             }
+            
             var token = GenerateToken(foundUser);
-            return Ok(new { user = foundUser, token });
+            return Ok(new { user = _mapper.Map<UserDto>(foundUser), token });
         }
 
         [HttpPost("register")]
@@ -56,7 +61,7 @@ namespace ProjectIssueTracker.Controllers
             };
             _context.Users.Add(CreatedUser);
             _context.SaveChanges();
-            return Ok(CreatedUser);
+            return Ok(_mapper.Map<UserDto>(CreatedUser));
         }
 
         private string GenerateToken(User user)

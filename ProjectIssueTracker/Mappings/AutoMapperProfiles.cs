@@ -12,6 +12,12 @@ namespace ProjectIssueTracker.Mappings
             CreateMap<ProjectCreateDto, Project>().ReverseMap();
             CreateMap<UserRegistrationDto, User>().ReverseMap();
             CreateMap<UserLoginDto, User>().ReverseMap();
+            CreateMap<User, UserDto>()
+                .ForMember(dest => dest.CreatedIssues, opt => opt.MapFrom(src => src.CreatedIssues))
+                .ForMember(dest => dest.CollaboratedProjects, opt => opt.MapFrom(src => src.CollaborativeProjects))
+                .ForMember(dest=>dest.Projects, opt=>opt.MapFrom(src=>src.OwnedProjects))
+                .ForMember(dest=>dest.Comments,opt=>opt.MapFrom(src=>src.Comments))
+                .ReverseMap();
 
             CreateMap<Project, ProjectDto>()
                 .ForMember(dest => dest.Issues, opt => opt.MapFrom(src => src.Issues))
