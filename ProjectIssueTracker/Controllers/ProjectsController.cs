@@ -43,6 +43,37 @@ namespace ProjectIssueTracker.Controllers
             return Ok(_mapper.Map<ProjectDto>(newProject));
         }
 
+        [HttpGet("projectId")]
+        [Authorize]
+        public async Task<IActionResult> GetProjectAsync([FromRoute] int projectId)
+        {
+            var project = await _projectService.GetProject(projectId);
+
+            if (project == null)
+            {
+                return NotFound("Project not found");
+            }
+
+            return Ok(_mapper.Map<ProjectDto>(project));
+        }
+
+        [HttpPut("projectId")]
+        [Authorize(Policy ="ProjectOwnerPolicy")]
+        public async Task<IActionResult> UpdateProject([FromBody] ProjectUpdateDto projectUpdate, [FromRoute] int projectId)
+        {
+            var oldProject = await _projectService.GetProject(projectId);
+
+            if (oldProject == null)
+            {
+                return NotFound("Project not found");
+            }
+
+            var newProject = await _projectService.UpdateProject(projectUpdate, oldProject);
+
+            return Ok(_mapper.Map<ProjectDto>(newProject)); 
+
+        }
+
         [HttpGet("user/{id}")]
         [Authorize]
         public async Task<IActionResult> GetAllProjectForUserAsync([FromRoute] int id)
@@ -109,18 +140,16 @@ namespace ProjectIssueTracker.Controllers
 
         [HttpDelete("remove-collaborators/{projectId}")]
         [Authorize(Policy = "ProjectOwnerPolicy")]
-        public IActionResult RemoveCollaborator([FromBody] RemoveCollaboratorDto request, [FromRoute] int projectId)
+        public async Task<IActionResult> RemoveCollaborator([FromBody] RemoveCollaboratorDto request, [FromRoute] int projectId)
         {
-            var projectCollaborator = _context.ProjectCollaborators.FirstOrDefault(p => p.ProjectId == projectId && p.UserId == request.CollaboratorId);
+            var projectCollaborator = await _projectService.GetCollaborator(request.CollaboratorId, projectId);
 
             if (projectCollaborator == null)
             {
                 return NotFound();
             }
 
-            _context.ProjectCollaborators.Remove(projectCollaborator);
-
-            _context.SaveChanges();
+            await _projectService.DeleteCollaborator(projectCollaborator);
 
             return Ok();
         }

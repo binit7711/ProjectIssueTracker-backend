@@ -15,5 +15,11 @@ namespace ProjectIssueTracker.Services
         Task<Project?> GetProject(int projectId, bool includeCollaborators = false, bool includeIssues = false);
 
         Task<Project> AddCollaborator(Project project, int userId);
+
+        Task<Project> UpdateProject(ProjectUpdateDto updateProject,Project project);
+
+        Task DeleteCollaborator(ProjectCollaborator projectCollaborator);
+
+        Task<ProjectCollaborator> GetCollaborator(int userId, int projectId);
     }
 }

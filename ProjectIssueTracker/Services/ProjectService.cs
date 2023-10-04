@@ -66,9 +66,33 @@ namespace ProjectIssueTracker.Services
 
         public async Task<Project> AddCollaborator(Project project, int userId)
         {
-            project.Collaborators.Add(new ProjectCollaborator { ProjectId=project.Id, UserId=userId });
+            project.Collaborators.Add(new ProjectCollaborator { ProjectId = project.Id, UserId = userId });
             await _dbContext.SaveChangesAsync();
             return project;
+        }
+
+        public async Task<Project> UpdateProject(ProjectUpdateDto updateProject, Project project)
+        {
+            var result = await _dbContext.Projects.FindAsync(project);
+            result.Description = updateProject.Description;
+            result.Name = updateProject.Name;
+            await _dbContext.SaveChangesAsync();
+            return result;
+        }
+
+        public Task DeleteCollaborator(ProjectCollaborator projectCollaborator)
+        {
+            _dbContext.ProjectCollaborators.Remove(projectCollaborator);
+            return Task.CompletedTask;
+        }
+
+        public async Task<ProjectCollaborator> GetCollaborator(int userId, int projectId)
+        {
+            var collaborator = await _dbContext.ProjectCollaborators
+                .FirstOrDefaultAsync(project => project.ProjectId == projectId && project.UserId == userId);
+
+
+            return collaborator;
         }
     }
 }
