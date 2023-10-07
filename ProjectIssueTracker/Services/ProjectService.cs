@@ -10,7 +10,7 @@ namespace ProjectIssueTracker.Services
     public class ProjectService : IProjectService
     {
         private readonly ApiDBContext _dbContext;
-        private object _mapper;
+        private readonly IMapper _mapper;
 
         public ProjectService(ApiDBContext dbContext, IMapper mapper)
         {
@@ -20,12 +20,13 @@ namespace ProjectIssueTracker.Services
 
         public async Task<Project> CreateProject(ProjectCreateDto project)
         {
-            var newProject = (new Project
-            {
-                Name = project.Name,
-                Description = project.Description,
-                OwnerId = project.OwnerId,
-            });
+            var newProject = _mapper.Map<Project>(project);
+            //var newProject = (new Project
+            //{
+            //    Name = project.Name,
+            //    Description = project.Description,
+            //    OwnerId = project.OwnerId,
+            //});
             _dbContext.Projects.Add(newProject);
             await _dbContext.SaveChangesAsync();
 
@@ -33,49 +34,98 @@ namespace ProjectIssueTracker.Services
         }
 
 
-        public async Task<List<Project>> GetOwnedProjectsForUserAsync(int userId)
+        public async Task<IEnumerable<Project>> GetOwnedProjectsForUserAsync(int userId, int pageNumber = 1, int pageSize = 9)
         {
 
-            var result = await _dbContext.Projects.Include(p => p.Owner).Where(p => p.OwnerId == userId).ToListAsync();
+            var totalCount = await _dbContext.Projects
+                 .Where(p => p.OwnerId == userId)
+                 .CountAsync();
+
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            var result = await _dbContext.Projects
+                .Include(p => p.Owner)
+                .Where(p => p.OwnerId == userId)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
             return result;
         }
 
         public async Task DeleteProject(Project project)
         {
-            _dbContext.Projects.Remove(project);
+            var pro = await _dbContext.Projects
+                .Include(p => p.Issues)
+                .Include(p => p.Collaborators)
+                .Include(p => p.Owner)
+                .FirstOrDefaultAsync(p => p.Id == project.Id);
+
+            if (pro == null)
+            {
+                return;
+            }
+
+            foreach (var issue in project.Issues)
+            {
+                _dbContext.Issues.Remove(issue);
+            }
+
+            foreach (var collaborators in project.Collaborators)
+            {
+                _dbContext.ProjectCollaborators.Remove(collaborators);
+            }
+
+            _dbContext.Projects.Remove(pro);
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<Project?> GetProject(int projectId, bool includeCollaborators = false, bool includeIssues = false)
+        public async Task<Project?> GetProject(int projectId, bool includeCollaborators, bool includeIssues)
         {
-            var projects = _dbContext.Projects;
+            var projects = _dbContext.Projects.AsQueryable<Project>();
 
             if (includeCollaborators)
             {
-                projects.Include(p => p.Collaborators);
+                projects = projects.Include(p => p.Collaborators).ThenInclude(p => p.User);
             }
 
             if (includeIssues)
             {
-                projects.Include(p => p.Issues);
+                projects = projects.Include(p => p.Issues);
             }
 
-            return await projects.FirstOrDefaultAsync(project => project.Id == projectId);
+            return await projects.Include(p => p.Owner)
+                .FirstOrDefaultAsync(project => project.Id == projectId);
         }
 
-        public async Task<Project> AddCollaborator(Project project, int userId)
+        public async Task<Project?> AddCollaborator(Project project, int userId)
         {
-            project.Collaborators.Add(new ProjectCollaborator { ProjectId = project.Id, UserId = userId });
+            //var collaborator = _dbContext.ProjectCollaborators.Add(new ProjectCollaborator { ProjectId = project.Id, UserId = userId });
+
+            //await _dbContext.SaveChangesAsync();
+            //var proj = await _dbContext.Projects
+            //    .Include(p => p.Collaborators)
+            //    .FirstOrDefaultAsync(p => p.Id == project.Id);
+
+            //if (proj == null)
+            //{
+            //    return null;
+            //}
+
+            _dbContext.ProjectCollaborators.Add(new ProjectCollaborator { ProjectId = project.Id, UserId = userId });
+
             await _dbContext.SaveChangesAsync();
-            return project;
+            var p = await _dbContext.Projects
+                .Include(p => p.Collaborators)
+                .FirstOrDefaultAsync(p => p.Id == project.Id);
+            return p;
         }
 
         public async Task<Project> UpdateProject(ProjectUpdateDto updateProject, Project project)
         {
-            var result = await _dbContext.Projects.FindAsync(project);
-            result.Description = updateProject.Description;
-            result.Name = updateProject.Name;
+            var result = await _dbContext.Projects.FindAsync(project.Id);
+
+            _mapper.Map(updateProject, project);
             await _dbContext.SaveChangesAsync();
             return result;
         }
@@ -90,7 +140,6 @@ namespace ProjectIssueTracker.Services
         {
             var collaborator = await _dbContext.ProjectCollaborators
                 .FirstOrDefaultAsync(project => project.ProjectId == projectId && project.UserId == userId);
-
 
             return collaborator;
         }

@@ -6,17 +6,17 @@ namespace ProjectIssueTracker.Services
 {
     public interface IProjectService
     {
-        Task<List<Project>> GetOwnedProjectsForUserAsync(int userId);
+        Task<IEnumerable<Project>> GetOwnedProjectsForUserAsync(int userId, int pageNumber = 1, int pageSize = 9);
 
         Task<Project> CreateProject(ProjectCreateDto project);
 
         Task DeleteProject(Project project);
 
-        Task<Project?> GetProject(int projectId, bool includeCollaborators = false, bool includeIssues = false);
+        Task<Project?> GetProject(int projectId, bool includeCollaborators, bool includeIssues);
 
-        Task<Project> AddCollaborator(Project project, int userId);
+        Task<Project?> AddCollaborator(Project project, int userId);
 
-        Task<Project> UpdateProject(ProjectUpdateDto updateProject,Project project);
+        Task<Project> UpdateProject(ProjectUpdateDto updateProject, Project project);
 
         Task DeleteCollaborator(ProjectCollaborator projectCollaborator);
 

@@ -8,5 +8,7 @@ namespace ProjectIssueTracker.Dtos.RequestDtos
         public string Title { get; set; }
         [Required]
         public string Description { get; set; }
+        [Required]
+        public Status Status { get; set; }
     }
 }

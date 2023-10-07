@@ -12,7 +12,7 @@ using ProjectIssueTracker.Models;
 
 namespace ProjectIssueTracker.Controllers
 {
-    [Route("api/issues")]
+    [Route("api/projects")]
     [ApiController]
     public class IssuesController : ControllerBase
     {
@@ -23,7 +23,10 @@ namespace ProjectIssueTracker.Controllers
             _context = context;
         }
 
-       // [HttpPost("projects/{projectId}")]
+        //[Route("api/projects/{projectId}/issues")]
+        //[Route("api/projects/{projectId}/issues/{issueId}")]
+        //[Route("api/issues/user")]
+        //[Route("api/issues/{issueId}")]
 
     }
 }

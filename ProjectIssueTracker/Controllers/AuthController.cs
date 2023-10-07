@@ -62,7 +62,9 @@ namespace ProjectIssueTracker.Controllers
             };
             _context.Users.Add(CreatedUser);
             _context.SaveChanges();
-            return Ok(_mapper.Map<UserDto>(CreatedUser));
+            var token = GenerateToken(CreatedUser);
+
+            return Ok(new { user = _mapper.Map<UserDto>(CreatedUser), token });
         }
 
         private string GenerateToken(User user)

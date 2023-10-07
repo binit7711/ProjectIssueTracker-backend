@@ -48,6 +48,7 @@ namespace ProjectIssueTracker.Data
 
             base.OnModelCreating(modelBuilder);
         }
+
     }
 
 }

@@ -9,6 +9,7 @@ using ProjectIssueTracker.Mappings;
 using ProjectIssueTracker.Services;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace ProjectIssueTracker
 {
@@ -21,7 +22,9 @@ namespace ProjectIssueTracker
             // Add services to the container.
 
             var connectionString = builder.Configuration.GetConnectionString("ApiConnection");
-            builder.Services.AddDbContext<ApiDBContext>(options => options.UseSqlServer(connectionString));
+            builder.Services.AddDbContext<ApiDBContext>(options => options
+            //.UseLazyLoadingProxies()
+            .UseSqlServer(connectionString));
 
             builder.Services.AddScoped<IProjectService, ProjectService>();
 
@@ -31,6 +34,10 @@ namespace ProjectIssueTracker
 
             //builder.Services.AddDbContext<ApiDBContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection")));
             builder.Services.AddControllers();
+            //.AddJsonOptions(options =>
+            //{
+            //    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+            //});
 
             builder.Services.AddSwaggerGen(options =>
             {

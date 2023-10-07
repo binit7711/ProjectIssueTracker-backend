@@ -9,8 +9,8 @@ namespace ProjectIssueTracker.Models
         public string Text { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public int CommenterId { get; set; }
-        public User Commenter { get; set; }
+        public virtual User Commenter { get; set; }
         public int IssueId { get; set; }
-        public Issue Issue { get; set; }
+        public virtual Issue Issue { get; set; }
     }
 }

@@ -7,6 +7,7 @@ using ProjectIssueTracker.Dtos;
 using ProjectIssueTracker.Dtos.RequestDtos;
 using ProjectIssueTracker.Models;
 using ProjectIssueTracker.Services;
+using System.Drawing.Printing;
 
 namespace ProjectIssueTracker.Controllers
 {
@@ -29,25 +30,25 @@ namespace ProjectIssueTracker.Controllers
 
         [HttpPost]
         [Authorize]
-        public IActionResult CreateProjectForUser([FromBody] ProjectCreateDto project)
+        public async Task<IActionResult> CreateProjectForUserAsync([FromBody] ProjectCreateDto project)
         {
-            var user = _userService.GetUserById(project.OwnerId);
+            var user = await _userService.GetUserById(project.OwnerId);
 
             if (user == null)
             {
                 return NotFound("User doesn't exist");
             }
 
-            var newProject = _projectService.CreateProject(project);
+            var newProject = await _projectService.CreateProject(project);
 
             return Ok(_mapper.Map<ProjectDto>(newProject));
         }
 
-        [HttpGet("projectId")]
+        [HttpGet("{projectId}")]
         [Authorize]
         public async Task<IActionResult> GetProjectAsync([FromRoute] int projectId)
         {
-            var project = await _projectService.GetProject(projectId);
+            var project = await _projectService.GetProject(projectId, true, true);
 
             if (project == null)
             {
@@ -57,11 +58,11 @@ namespace ProjectIssueTracker.Controllers
             return Ok(_mapper.Map<ProjectDto>(project));
         }
 
-        [HttpPut("projectId")]
-        [Authorize(Policy ="ProjectOwnerPolicy")]
+        [HttpPut("{projectId}")]
+        [Authorize(Policy = "ProjectOwnerPolicy")]
         public async Task<IActionResult> UpdateProject([FromBody] ProjectUpdateDto projectUpdate, [FromRoute] int projectId)
         {
-            var oldProject = await _projectService.GetProject(projectId);
+            var oldProject = await _projectService.GetProject(projectId, false, false);
 
             if (oldProject == null)
             {
@@ -70,20 +71,32 @@ namespace ProjectIssueTracker.Controllers
 
             var newProject = await _projectService.UpdateProject(projectUpdate, oldProject);
 
-            return Ok(_mapper.Map<ProjectDto>(newProject)); 
+            return Ok(_mapper.Map<ProjectDto>(newProject));
 
         }
 
         [HttpGet("user/{id}")]
         [Authorize]
-        public async Task<IActionResult> GetAllProjectForUserAsync([FromRoute] int id)
+        public async Task<IActionResult> GetAllProjectForUserAsync([FromRoute] int id, int pageNumber = 1, int pageSize = 9)
         {
 
-            var projects = await _projectService.GetOwnedProjectsForUserAsync(id);
+            var projects = await _projectService.GetOwnedProjectsForUserAsync(id, pageNumber, pageSize);
 
             var projectDto = _mapper.Map<List<ProjectDto>>(projects);
 
             return Ok(projectDto);
+        }
+
+        [HttpGet("user/{id}/count")]
+        [Authorize]
+        public async Task<IActionResult> GetPageCount([FromRoute] int id)
+        {
+            var totalCount = await _context.Projects
+                .Where(p => p.OwnerId == id)
+                .CountAsync();
+
+
+            return Ok(new { count = totalCount });
         }
 
         [HttpDelete("{projectId}")]
@@ -91,7 +104,7 @@ namespace ProjectIssueTracker.Controllers
         public async Task<IActionResult> DeleteProjectForuser([FromRoute] int projectId)
         {
 
-            var project = await _projectService.GetProject(projectId);
+            var project = await _projectService.GetProject(projectId, false, false);
 
             if (project == null)
             {
@@ -108,14 +121,18 @@ namespace ProjectIssueTracker.Controllers
         public async Task<IActionResult> AddCollaboratorAsync([FromBody] AddCollaboratorDto request, [FromRoute] int projectId)
         {
 
-            var project = await _projectService.GetProject(projectId, includeCollaborators: true);
+            var project = await _projectService.GetProject(projectId, true, false);
 
             if (project == null)
             {
                 return NotFound();
             }
+            if (request.UserId == 0)
+            {
+                return BadRequest();
+            }
 
-            var user = _userService.GetUserById(request.UserId);
+            var user = await _userService.GetUserById(request.UserId);
 
             if (user == null)
             {
@@ -127,14 +144,14 @@ namespace ProjectIssueTracker.Controllers
                 return BadRequest("User is already owner of the project");
             }
 
-            if (project.Collaborators.Any(c => c.UserId == request.UserId))
+            if (project.Collaborators != null && project.Collaborators.Any(c => c.UserId == request.UserId))
             {
                 return BadRequest("User is already a collaborator on the project");
             }
 
-            await _projectService.AddCollaborator(project, user.Id);
+            var pro = await _projectService.AddCollaborator(project, user.Id);
 
-            return Ok(_mapper.Map<ProjectDto>(project));
+            return Ok(_mapper.Map<ProjectDto>(pro));
 
         }
 
@@ -156,29 +173,91 @@ namespace ProjectIssueTracker.Controllers
 
         [HttpPost("{projectId}/issues")]
         [Authorize]
-        public IActionResult CreateIssueForProject([FromBody] IssueCreateDto issue, [FromRoute] int projectId)
+        public async Task<IActionResult> CreateIssueForProjectAsync([FromBody] IssueCreateDto issue, [FromRoute] int projectId)
         {
-            var project = _context.Projects
-                .Include(p => p.Issues)
-                .Include(p => p.Owner)
-                .FirstOrDefault(proj => proj.Id == projectId);
+            var project = await _projectService.GetProject(projectId, includeCollaborators: false, includeIssues: true);
 
             if (project == null)
             {
                 return NotFound();
             }
 
-            project.Issues.Add(new Issue { Title = issue.Title, Description = issue.Description, CreatorId = project.Owner.Id });
+            _context.Issues.Add(new Issue { Title = issue.Title, Description = issue.Description, CreatorId = project.Owner.Id, Status = issue.Status, ProjectId = projectId });
 
             _context.SaveChanges();
 
             var response = _mapper.Map<ProjectDto>(project);
+
             return Ok(response);
 
         }
 
-        //[HttpPut("{projectId}/issues")]
-        //[HttpGet("{projectId}/issues")]
-        //[HttpDelete("{projectId}/issues/{issueId}")]
+        [HttpGet("{projectId}/issues")]
+        public async Task<IActionResult> GetIssuesForProjectAsync([FromRoute] int projectId, int pageSize, int pageNumber)
+        {
+            var project = await _projectService.GetProject(projectId, includeCollaborators: false, includeIssues: true);
+
+            if (project == null)
+            {
+                return NotFound("Project doesn't exist");
+            }
+
+            //var issues = await _context.Issues.Where(issue => issue.ProjectId == projectId)
+            //    .ToListAsync();
+
+            var issues = await _context.Issues
+                    .Where(i => i.ProjectId == projectId)
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+            return Ok(_mapper.Map<List<IssueDto>>(issues));
+        }
+
+        [HttpGet("{projectId}/issues/count")]
+        public async Task<IActionResult> GetCountOfIssues([FromRoute] int projectId)
+        {
+            var count = await _context.Issues.Where(issue => issue.ProjectId == projectId).CountAsync();
+
+            return Ok(new { count });
+        }
+
+        [HttpDelete("{projectId}/issues/{issueId}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteIssueById([FromRoute] int projectId, [FromRoute] int issueId)
+        {
+            var issue = await _context.Issues.Include(i => i.CreatorId).FirstOrDefaultAsync(i => i.Id == issueId);
+
+            if (issue == null)
+            {
+                return NotFound("Issue doesn't exist");
+            }
+
+            _context.Issues.Remove(issue);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(_mapper.Map<IssueDto>(issue));
+        }
+
+        [HttpPut("{projectId}/issues/{issueId}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateIssueById([FromRoute] int issueId, [FromBody] IssueCreateDto updatedIssue)
+        {
+            var issue = await _context.Issues.FirstOrDefaultAsync(i => i.Id == issueId);
+
+            if (issue == null)
+            {
+                return NotFound("Issue doesn't exist");
+            }
+
+            issue.Title = updatedIssue.Title;
+            issue.Status = updatedIssue.Status;
+            issue.Description = updatedIssue.Description;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(_mapper.Map<IssueDto>(issue));
+        }
     }
 }
