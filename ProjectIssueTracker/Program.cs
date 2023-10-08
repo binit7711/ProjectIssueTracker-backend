@@ -6,6 +6,8 @@ using Microsoft.OpenApi.Models;
 using ProjectIssueTracker.Authorization;
 using ProjectIssueTracker.Data;
 using ProjectIssueTracker.Mappings;
+using ProjectIssueTracker.Repositories.Contracts;
+using ProjectIssueTracker.Repositories.Repos;
 using ProjectIssueTracker.Services;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
@@ -22,13 +24,19 @@ namespace ProjectIssueTracker
             // Add services to the container.
 
             var connectionString = builder.Configuration.GetConnectionString("ApiConnection");
+
             builder.Services.AddDbContext<ApiDBContext>(options => options
             //.UseLazyLoadingProxies()
             .UseSqlServer(connectionString));
 
+           //builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+           //builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+
             builder.Services.AddScoped<IProjectService, ProjectService>();
 
             builder.Services.AddScoped<IUserService, UserService>();
+
+            builder.Services.AddScoped<ICollaboratorService,CollaboratorService>();
 
             builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 

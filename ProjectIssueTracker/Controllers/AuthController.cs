@@ -5,6 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using ProjectIssueTracker.Data;
 using ProjectIssueTracker.Dtos;
 using ProjectIssueTracker.Models;
+using ProjectIssueTracker.Repositories.Contracts;
+using ProjectIssueTracker.Repositories.Repos;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -16,40 +18,43 @@ namespace ProjectIssueTracker.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ApiDBContext _context;
+
         private readonly IConfiguration _config;
         private readonly IMapper _mapper;
 
-        public AuthController(ApiDBContext context, IConfiguration config,IMapper mapper)
+        public AuthController(ApiDBContext context, IConfiguration config, IMapper mapper)
         {
             _context = context;
             _config = config;
             _mapper = mapper;
         }
         [HttpPost("login")]
-        public IActionResult Login(UserLoginDto user)
+        public IActionResult Login(UserLoginDto userLoginDto)
         {
-            var foundUser = _context.Users.FirstOrDefault(u => u.Email == user.Email);
 
+            var foundUser = _context.Users.FirstOrDefault(u => u.Email == userLoginDto.Email);
             if (foundUser == null)
             {
                 return NotFound("Credentials Incorrect");
             }
-            var passwordMatch = BCrypt.Net.BCrypt.Verify(user.Password, foundUser.Password);
+
+            var passwordMatch = BCrypt.Net.BCrypt.Verify(userLoginDto.Password, foundUser.Password);
 
             if (!passwordMatch)
             {
                 return NotFound("Credentials Incorrect");
             }
-            
+
             var token = GenerateToken(foundUser);
+
             return Ok(new { user = _mapper.Map<UserDto>(foundUser), token });
         }
 
         [HttpPost("register")]
         public IActionResult Register(UserRegistrationDto user)
         {
-            var foundUser = _context.Users.FirstOrDefault(u=>u.Email == user.Email);
-            if (foundUser !=null)
+            var foundUser = _context.Users.FirstOrDefault(u => u.Email == user.Email);
+            if (foundUser != null)
             {
                 return BadRequest("User already has an account with the same email");
             }
