@@ -2,6 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using ProjectIssueTracker.Data;
 using ProjectIssueTracker.Dtos;
+using ProjectIssueTracker.Dtos.RequestDtos;
+using ProjectIssueTracker.Extensions;
+using ProjectIssueTracker.Models;
 
 namespace ProjectIssueTracker.Services
 {
@@ -25,6 +28,60 @@ namespace ProjectIssueTracker.Services
 
             await _context.SaveChangesAsync();
             return _mapper.Map<IssueDto>(issue);
+
+        }
+
+        public async Task<int> GetIssueCountForProject(int projectId)
+        {
+            var count = await _context.Issues.Where(issue => issue.ProjectId == projectId).CountAsync();
+            return count;
+        }
+
+        public Task<List<IssueDto>> GetIssuesForProject(int projectId, int pageNumber, int pageSize)
+        {
+            var result = _context.Issues
+                    .Where(i => i.ProjectId == projectId)
+                    .Include(i => i.Creator)
+                    .AsQueryable()
+                    .Paginate(pageNumber, pageSize)
+                    .Items.ToList();
+
+            return Task.FromResult(_mapper.Map<List<IssueDto>>(result));
+        }
+
+        public Task<PaginatedResult<Issue>> GetIssuesForUser(int userId, int pageNumber, int pageSize)
+        {
+            var result = _context.Issues
+                .Include(i => i.Project)
+                .Include(i => i.Creator)
+                .Where(i => i.CreatorId == userId)
+                .Paginate(pageNumber, pageSize);
+
+            return Task.FromResult(result);
+            
+        }
+
+        public async Task<IssueDto?> UpdateIssue(int issueId, IssueCreateDto issueUpdateDto)
+        {
+            var issue = await _context.Issues.FirstOrDefaultAsync(i => i.Id == issueId);
+
+            if (issue == null)
+            {
+                return null;
+            }
+
+            issue.Title = issueUpdateDto.Title;
+            issue.Status = issueUpdateDto.Status;
+            issue.Description = issueUpdateDto.Description;
+
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<IssueDto>(issue);
+        }
+
+        public async Task CreateIssue(int projectId, int userId, IssueCreateDto issueCreate)
+        {
+            await _context.Issues.AddAsync(new Issue { Title = issueCreate.Title, Description = issueCreate.Description, CreatorId = userId, Status = issueCreate.Status, ProjectId = projectId });
         }
     }
 }

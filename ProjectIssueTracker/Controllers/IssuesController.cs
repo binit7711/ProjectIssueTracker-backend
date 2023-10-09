@@ -53,7 +53,7 @@ namespace ProjectIssueTracker.Controllers
 
             var user = await _userService.GetUserById(userId);
 
-            if(user == null)
+            if (user == null)
             {
                 return Unauthorized();
             }
@@ -63,9 +63,7 @@ namespace ProjectIssueTracker.Controllers
                 return NotFound();
             }
 
-            _context.Issues.Add(new Issue { Title = issue.Title, Description = issue.Description, CreatorId = user.Id, Status = issue.Status, ProjectId = projectId });
-
-            _context.SaveChanges();
+            await _issueService.CreateIssue(projectId, userId, issue);
 
             var response = _mapper.Map<ProjectDto>(project);
 
@@ -84,22 +82,16 @@ namespace ProjectIssueTracker.Controllers
                 return NotFound("Project doesn't exist");
             }
 
-            var result = _context.Issues
-                    .Where(i => i.ProjectId == projectId)
-                    .Include(i => i.Creator)
-                    .AsQueryable()
-                    .Paginate(pageNumber, pageSize)
-                    .Items.ToList();
+            var issues = await _issueService.GetIssuesForProject(projectId, pageNumber, pageSize);
 
-            return Ok(_mapper.Map<List<IssueDto>>(result));
+            return Ok(issues);
         }
 
         [HttpGet("{projectId}/issues/count")]
         [Authorize]
         public async Task<IActionResult> GetCountOfIssues([FromRoute] int projectId)
         {
-            var count = await _context.Issues.Where(issue => issue.ProjectId == projectId).CountAsync();
-
+            var count = await _issueService.GetIssueCountForProject(projectId);
             return Ok(new { count });
         }
 
@@ -108,51 +100,42 @@ namespace ProjectIssueTracker.Controllers
         public async Task<IActionResult> DeleteIssueById([FromRoute] int projectId, [FromRoute] int issueId)
         {
 
-           var issue =  await _issueService.DeleteIssue(issueId);
+            var issue = await _issueService.DeleteIssue(issueId);
 
-           return Ok(_mapper.Map<IssueDto>(issue));
+            return Ok(_mapper.Map<IssueDto>(issue));
         }
 
         [HttpPut("{projectId}/issues/{issueId}")]
         [Authorize]
         public async Task<IActionResult> UpdateIssueById([FromRoute] int issueId, [FromBody] IssueCreateDto updatedIssue)
         {
-            var issue = await _context.Issues.FirstOrDefaultAsync(i => i.Id == issueId);
+
+            var issue = await _issueService.UpdateIssue(issueId, updatedIssue);
 
             if (issue == null)
             {
-                return NotFound("Issue doesn't exist");
+                return NotFound();
             }
 
-            issue.Title = updatedIssue.Title;
-            issue.Status = updatedIssue.Status;
-            issue.Description = updatedIssue.Description;
-
-            await _context.SaveChangesAsync();
-
-            return Ok(_mapper.Map<IssueDto>(issue));
+            return Ok(issue);
         }
 
         [HttpGet("issues")]
         [Authorize]
-        public Task<IActionResult> GetIssuesForUser(int pageSize, int pageNumber)
+        public async Task<IActionResult> GetIssuesForUser(int pageSize, int pageNumber)
         {
             var userIdClaim = HttpContext.User.Claims.FirstOrDefault((c) => c.Type == ClaimTypes.NameIdentifier);
 
             if (userIdClaim == null)
             {
-                return Task.FromResult<IActionResult>(Unauthorized());
+                return Unauthorized();
             }
 
             var userId = int.Parse(userIdClaim.Value);
 
-            var issues = _context.Issues
-                .Include(i => i.Project)
-                .Include(i => i.Creator)
-                .Where(i => i.CreatorId == userId)
-                .Paginate(pageNumber, pageSize);
-
-            return Task.FromResult<IActionResult>(Ok(new { count = issues.TotalCount, issues = _mapper.Map<List<IssueDto>>(issues.Items.ToList()) }));
+            var issues = await _issueService.GetIssuesForUser(userId, pageNumber, pageSize);
+            var issuesDto = _mapper.Map<List<IssueDto>>(issues.Items.ToList());
+            return Ok(new { count = issues.TotalCount, issues = issuesDto });
         }
     }
 }
