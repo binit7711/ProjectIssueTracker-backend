@@ -81,7 +81,7 @@ namespace ProjectIssueTracker.Controllers
         }
 
         [HttpGet("{projectId}/collaborators")]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> SearchCollaborators(int projectId, string searchQuery)
         {
             var collaborators = await _collaboratorService.SearchCollaboratorByNameOrEmail(projectId, searchQuery);

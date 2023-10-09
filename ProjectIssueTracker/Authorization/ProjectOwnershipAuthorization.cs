@@ -28,7 +28,7 @@ namespace ProjectIssueTracker.Authorization
                 var routeData = httpContext.GetRouteData();
                 if (routeData != null)
                 {
-                    var userIdClaim = context.User.Claims.FirstOrDefault((c) => c.Type == ClaimTypes.NameIdentifier);
+                    var userIdClaim =context.User.Claims.FirstOrDefault((c) => c.Type == ClaimTypes.NameIdentifier);
 
                     if (userIdClaim == null || userIdClaim?.Value == null)
                     {

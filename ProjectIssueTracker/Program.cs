@@ -38,9 +38,10 @@ namespace ProjectIssueTracker
 
             builder.Services.AddScoped<ICollaboratorService,CollaboratorService>();
 
+            builder.Services.AddScoped<IIssueService, IssueService>();
+
             builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 
-            //builder.Services.AddDbContext<ApiDBContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection")));
             builder.Services.AddControllers();
             //.AddJsonOptions(options =>
             //{
