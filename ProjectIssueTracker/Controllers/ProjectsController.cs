@@ -51,7 +51,7 @@ namespace ProjectIssueTracker.Controllers
         public async Task<IActionResult> GetProjectAsync([FromRoute] int projectId)
         {
             var project = await _projectService.GetProjectByIdAsync(projectId, true, true);
-
+            
             if (project == null)
             {
                 return NotFound("Project not found");
@@ -85,7 +85,9 @@ namespace ProjectIssueTracker.Controllers
             var projects = await _projectService.GetOwnedProjectsAsync(id, pageNumber, pageSize);
 
             var projectDto = _mapper.Map<List<ProjectDto>>(projects);
-
+            projectDto.ForEach(project => project.IssueMetrics = project.Issues
+                .GroupBy(i => i.Status)
+                .ToDictionary(g => g.Key.ToString(), g => g.Count()));
             return Ok(projectDto);
         }
 

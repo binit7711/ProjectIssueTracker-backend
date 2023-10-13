@@ -35,6 +35,7 @@ namespace ProjectIssueTracker.Services
         {
 
             var result = await _dbContext.Projects
+                .Include(p=>p.Issues)
                 .Include(p => p.Owner)
                 .Where(p => p.OwnerId == userId)
                 .Skip((pageNumber - 1) * pageSize)

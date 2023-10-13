@@ -9,5 +9,11 @@
         public int OwnerId { get; set; }
         public List<CollaboratorDto> Collaborators { get; set; }
         public List<IssueDto> Issues { get; set; }
+        public Dictionary<string,int> IssueMetrics { get; set; }
+    }
+    public class IssueMetric
+    {
+        public string Status { get; set; }
+        public int Count { get; set; }
     }
 }
