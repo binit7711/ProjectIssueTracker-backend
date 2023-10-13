@@ -82,6 +82,7 @@ namespace ProjectIssueTracker.Services
         public async Task CreateIssue(int projectId, int userId, IssueCreateDto issueCreate)
         {
             await _context.Issues.AddAsync(new Issue { Title = issueCreate.Title, Description = issueCreate.Description, CreatorId = userId, Status = issueCreate.Status, ProjectId = projectId });
+            await _context.SaveChangesAsync();
         }
     }
 }

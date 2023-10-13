@@ -99,6 +99,18 @@ namespace ProjectIssueTracker.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteIssueById([FromRoute] int projectId, [FromRoute] int issueId)
         {
+            //var userIdClaim = HttpContext.User.Claims.FirstOrDefault((c) => c.Type == ClaimTypes.NameIdentifier);
+            //var project = await  _projectService.GetProjectByIdAsync(projectId, true, false);
+            //if (project.OwnerId != int.Parse(userIdClaim.Value)&&)
+            //{
+            //    return Forbid();
+            //}
+
+            var userIdClaim = HttpContext.User.Claims.FirstOrDefault((c) => c.Type == ClaimTypes.NameIdentifier);
+            if (!CheckIfProjectOrIssueOwner(issueId, int.Parse(userIdClaim.Value)))
+            {
+                return Forbid();
+            }
 
             var issue = await _issueService.DeleteIssue(issueId);
 
@@ -109,6 +121,13 @@ namespace ProjectIssueTracker.Controllers
         [Authorize]
         public async Task<IActionResult> UpdateIssueById([FromRoute] int issueId, [FromBody] IssueCreateDto updatedIssue)
         {
+            var userIdClaim = HttpContext.User.Claims.FirstOrDefault((c) => c.Type == ClaimTypes.NameIdentifier);
+            if (!CheckIfProjectOrIssueOwner(issueId, int.Parse(userIdClaim.Value)))
+            {
+                return Forbid();
+            }
+
+
 
             var issue = await _issueService.UpdateIssue(issueId, updatedIssue);
 
@@ -137,5 +156,19 @@ namespace ProjectIssueTracker.Controllers
             var issuesDto = _mapper.Map<List<IssueDto>>(issues.Items.ToList());
             return Ok(new { count = issues.TotalCount, issues = issuesDto });
         }
+        bool CheckIfProjectOrIssueOwner(int issueId, int userId)
+        {
+            var issue = _context.Issues
+                .Include(c => c.Project)
+                .FirstOrDefault(i => i.Id == issueId);
+
+            if (issue.CreatorId == userId || issue.Project.OwnerId == userId)
+            {
+                return true;
+            }
+            return false;
+
+        }
+
     }
 }
