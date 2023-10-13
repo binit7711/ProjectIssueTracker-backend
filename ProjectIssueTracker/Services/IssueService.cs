@@ -33,7 +33,10 @@ namespace ProjectIssueTracker.Services
 
         public async Task<int> GetIssueCountForProject(int projectId)
         {
-            var count = await _context.Issues.Where(issue => issue.ProjectId == projectId).CountAsync();
+            var count = await _context.Issues
+                .Where(issue => issue.ProjectId == projectId)
+                .CountAsync();
+
             return count;
         }
 
@@ -43,8 +46,10 @@ namespace ProjectIssueTracker.Services
                     .Where(i => i.ProjectId == projectId)
                     .Include(i => i.Creator)
                     .AsQueryable()
+                    .OrderBy(i=>i.Id)
                     .Paginate(pageNumber, pageSize)
-                    .Items.ToList();
+                    .Items
+                    .ToList();
 
             return Task.FromResult(_mapper.Map<List<IssueDto>>(result));
         }
@@ -55,6 +60,7 @@ namespace ProjectIssueTracker.Services
                 .Include(i => i.Project)
                 .Include(i => i.Creator)
                 .Where(i => i.CreatorId == userId)
+                .OrderBy(i=>i.Id)
                 .Paginate(pageNumber, pageSize);
 
             return Task.FromResult(result);

@@ -51,7 +51,7 @@ namespace ProjectIssueTracker.Controllers
         public async Task<IActionResult> GetProjectAsync([FromRoute] int projectId)
         {
             var project = await _projectService.GetProjectByIdAsync(projectId, true, true);
-            
+
             if (project == null)
             {
                 return NotFound("Project not found");
@@ -124,21 +124,24 @@ namespace ProjectIssueTracker.Controllers
         [Authorize]
         public async Task<IActionResult> GetCollaborativeProjects([FromRoute] int userId, int pageNumber = 1, int pageSize = 9)
         {
-            var count = _context.Projects
-                .Include(p => p.Collaborators)
-                .ThenInclude(p => p.User)
-                .Include(p => p.Issues)
-                .Where(p => p.Collaborators.Any(pc => pc.User.Id == userId)).Count();
+            //var count = _context.Projects
+            //    .Include(p => p.Collaborators)
+            //    .ThenInclude(p => p.User)
+            //    .Include(p => p.Issues)
+            //    .Where(p => p.Collaborators.Any(pc => pc.User.Id == userId)).Count();
 
-            var result = await _context.Projects
+            var temp = _context.Projects
                 .Include(p => p.Collaborators)
                 .ThenInclude(p => p.User)
-                //.Include(p => p.Issues)
-                //.ThenInclude(p=>p.Creator)
-                .Where(p => p.Collaborators.Any(pc => pc.User.Id == userId))
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+                .Where(p => p.Collaborators.Any(pc => pc.User.Id == userId));
+
+
+            var count = temp.Count();
+
+            var result = await temp
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
             return Ok(new { count, projects = _mapper.Map<List<ProjectDto>>(result) });
 
