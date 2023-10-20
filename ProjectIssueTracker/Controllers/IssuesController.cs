@@ -7,6 +7,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using ProjectIssueTracker.Data;
 using ProjectIssueTracker.Dtos;
@@ -26,14 +27,18 @@ namespace ProjectIssueTracker.Controllers
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
         private readonly IIssueService _issueService;
+        private readonly IHubContext<IssueHub, IIssueHub> _hubContext;
+        private readonly IssueHubService _issueHubService;
 
-        public IssuesController(ApiDBContext context, IProjectService projectService, IUserService userService, IMapper mapper, IIssueService issueService)
+        public IssuesController(ApiDBContext context, IProjectService projectService, IUserService userService, IMapper mapper, IIssueService issueService, IHubContext<IssueHub, IIssueHub> hubContext,IssueHubService issueHubService)
         {
             _context = context;
             _projectService = projectService;
             _userService = userService;
             _mapper = mapper;
             _issueService = issueService;
+            _hubContext = hubContext;
+            _issueHubService = issueHubService;
         }
 
         [HttpPost("{projectId}/issues")]
@@ -64,6 +69,13 @@ namespace ProjectIssueTracker.Controllers
             }
 
             await _issueService.CreateIssue(projectId, userId, issue);
+
+            if(project.OwnerId != userId)
+            {
+                await _issueHubService.UpdateToOwner(project.OwnerId, project.Name);
+            }
+
+            
 
             var response = _mapper.Map<ProjectDto>(project);
 
@@ -128,13 +140,15 @@ namespace ProjectIssueTracker.Controllers
             }
 
 
-
             var issue = await _issueService.UpdateIssue(issueId, updatedIssue);
 
             if (issue == null)
             {
                 return NotFound();
             }
+
+            //await _hubContext.Clients.All.IssueUpdate(issueId);
+            await _issueHubService.NotifyIssueUpdate(issueId);
 
             return Ok(issue);
         }

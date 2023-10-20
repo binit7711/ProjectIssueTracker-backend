@@ -1,5 +1,6 @@
 
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -29,14 +30,15 @@ namespace ProjectIssueTracker
             //.UseLazyLoadingProxies()
             .UseSqlServer(connectionString));
 
-           //builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-           //builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+            //builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            //builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 
             builder.Services.AddScoped<IProjectService, ProjectService>();
+            builder.Services.AddSingleton<IssueHubService>();
 
             builder.Services.AddScoped<IUserService, UserService>();
 
-            builder.Services.AddScoped<ICollaboratorService,CollaboratorService>();
+            builder.Services.AddScoped<ICollaboratorService, CollaboratorService>();
 
             builder.Services.AddScoped<IIssueService, IssueService>();
 
@@ -85,13 +87,22 @@ namespace ProjectIssueTracker
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("CorsPolicy", builder => builder.WithOrigins("http://127.0.0.1:4200", "http://localhost:4200").AllowAnyMethod().AllowAnyHeader());
+                options.AddPolicy("CorsPolicy", builder => builder.WithOrigins("http://127.0.0.1:4200", "http://localhost:4200")
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials()
+                
+                );
             });
 
             builder.Services.AddScoped<IAuthorizationHandler, ProjectOwnershipAuthorization>();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddSignalR(o =>
+            {
+                o.EnableDetailedErrors = true;
+            });
 
             var app = builder.Build();
 
@@ -102,14 +113,18 @@ namespace ProjectIssueTracker
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
 
             app.UseCors("CorsPolicy");
 
+            app.UseHttpsRedirection();
+
+
             app.UseAuthorization();
+            app.MapHub<IssueHub>("issue-notifications");
 
 
             app.MapControllers();
+
 
             app.Run();
         }

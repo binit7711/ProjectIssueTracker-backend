@@ -16,13 +16,15 @@ namespace ProjectIssueTracker.Controllers
         private readonly IProjectService _projectService;
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
+        private readonly IssueHubService _issueHubService;
 
-        public CollaboratorsController(ICollaboratorService collaboratorService, IProjectService projectService, IUserService userService, IMapper mapper)
+        public CollaboratorsController(ICollaboratorService collaboratorService, IProjectService projectService, IUserService userService, IMapper mapper,IssueHubService issueHubService)
         {
             _collaboratorService = collaboratorService;
             _projectService = projectService;
             _userService = userService;
             _mapper = mapper;
+            _issueHubService = issueHubService;
         }
 
 
@@ -61,6 +63,8 @@ namespace ProjectIssueTracker.Controllers
 
             await _collaboratorService.AddCollaboratorToProjectAsync(project, user.Id);
 
+            await _issueHubService.NotifyUser(user.Id, project.Name);
+
             return Ok();
         }
 
@@ -76,6 +80,9 @@ namespace ProjectIssueTracker.Controllers
             }
 
             await _collaboratorService.RemoveCollaboratorFromProjectAsync(projectCollaborator);
+           var project =  await _projectService.GetProjectByIdAsync(projectId,false,false);
+
+            await _issueHubService.NotifyRemoval(collaboratorId,project.Name);
 
             return Ok();
         }
