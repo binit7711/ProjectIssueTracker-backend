@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using ProjectIssueTracker.Authorization;
 using ProjectIssueTracker.Data;
 using ProjectIssueTracker.Mappings;
+using ProjectIssueTracker.Notifications;
 using ProjectIssueTracker.Repositories.Contracts;
 using ProjectIssueTracker.Repositories.Repos;
 using ProjectIssueTracker.Services;

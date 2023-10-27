@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using ProjectIssueTracker.Notifications;
 
 public class UserInfo
 {
@@ -19,7 +20,7 @@ public class IssueHub : Hub<IIssueHub>
     private readonly IssueHubService _issueHubService;
     private readonly ApiDBContext _dbContext;
 
-    public IssueHub(IssueHubService issueHubService,ApiDBContext dbContext)
+    public IssueHub(IssueHubService issueHubService, ApiDBContext dbContext)
     {
         _issueHubService = issueHubService;
         _dbContext = dbContext;
@@ -35,8 +36,10 @@ public class IssueHub : Hub<IIssueHub>
             .ToList();
 
         var connectionId = Context.ConnectionId;
-        _issueHubService.AddUser(connectionId, new UserInfo { UserId = userId, SubscribedIssues = issues });
-
+        if (connectionId != null && !string.IsNullOrEmpty(connectionId))
+        {
+            _issueHubService.AddUser(connectionId, new UserInfo { UserId = userId, SubscribedIssues = issues });
+        }
         //await Clients.All.IssueUpdate("Someone just joined");
 
         await base.OnConnectedAsync();
@@ -52,7 +55,7 @@ public class IssueHub : Hub<IIssueHub>
     {
         await Task.FromResult(_issueHubService.NotifyIssueUpdate(issueId));
     }
-    
+
 }
 
 public interface IIssueHub
