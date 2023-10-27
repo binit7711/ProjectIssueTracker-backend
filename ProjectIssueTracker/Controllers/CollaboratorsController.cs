@@ -2,8 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using ProjectIssueTracker.Dtos;
 using ProjectIssueTracker.Dtos.RequestDtos;
+using ProjectIssueTracker.Dtos.ResponseDtos;
+using ProjectIssueTracker.Notifications;
 using ProjectIssueTracker.Services;
 
 namespace ProjectIssueTracker.Controllers

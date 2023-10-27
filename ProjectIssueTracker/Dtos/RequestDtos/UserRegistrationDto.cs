@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace ProjectIssueTracker.Dtos
+namespace ProjectIssueTracker.Dtos.RequestDtos
 {
     public class UserRegistrationDto
     {

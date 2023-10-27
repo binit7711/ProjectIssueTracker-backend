@@ -1,4 +1,4 @@
-﻿using ProjectIssueTracker.Dtos;
+﻿using ProjectIssueTracker.Dtos.ResponseDtos;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProjectIssueTracker.Models

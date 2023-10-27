@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using ProjectIssueTracker.Dtos.ResponseDtos;
 
 namespace ProjectIssueTracker.Dtos.RequestDtos
 {

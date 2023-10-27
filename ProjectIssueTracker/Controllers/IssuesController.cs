@@ -10,10 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using ProjectIssueTracker.Data;
-using ProjectIssueTracker.Dtos;
 using ProjectIssueTracker.Dtos.RequestDtos;
+using ProjectIssueTracker.Dtos.ResponseDtos;
 using ProjectIssueTracker.Extensions;
 using ProjectIssueTracker.Models;
+using ProjectIssueTracker.Notifications;
 using ProjectIssueTracker.Services;
 
 namespace ProjectIssueTracker.Controllers
@@ -133,7 +134,8 @@ namespace ProjectIssueTracker.Controllers
         [Authorize]
         public async Task<IActionResult> UpdateIssueById([FromRoute] int issueId, [FromBody] IssueCreateDto updatedIssue)
         {
-            var userIdClaim = HttpContext.User.Claims.FirstOrDefault((c) => c.Type == ClaimTypes.NameIdentifier);
+            var userIdClaim = HttpContext.User.Claims.FirstOrDefault((c) => c.Type == ClaimTypes.NameIdentifier)!;
+
             if (!CheckIfProjectOrIssueOwner(issueId, int.Parse(userIdClaim.Value)))
             {
                 return Forbid();

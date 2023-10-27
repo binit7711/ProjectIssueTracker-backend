@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ProjectIssueTracker.Dtos;
+using ProjectIssueTracker.Dtos.RequestDtos;
 using ProjectIssueTracker.Models;
 
 namespace ProjectIssueTracker.Services

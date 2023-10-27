@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using ProjectIssueTracker.Data;
-using ProjectIssueTracker.Dtos;
 using ProjectIssueTracker.Dtos.RequestDtos;
+using ProjectIssueTracker.Dtos.ResponseDtos;
 using ProjectIssueTracker.Extensions;
 using ProjectIssueTracker.Models;
 

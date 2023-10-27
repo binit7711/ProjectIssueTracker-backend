@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.Build.Framework;
-using ProjectIssueTracker.Dtos;
+using ProjectIssueTracker.Dtos.RequestDtos;
+using ProjectIssueTracker.Dtos.ResponseDtos;
 using ProjectIssueTracker.Models;
 
 namespace ProjectIssueTracker.Mappings

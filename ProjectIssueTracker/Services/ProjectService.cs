@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjectIssueTracker.Data;
-using ProjectIssueTracker.Dtos;
+using ProjectIssueTracker.Dtos.RequestDtos;
 using ProjectIssueTracker.Models;
 using ProjectIssueTracker.Repositories.Contracts;
 

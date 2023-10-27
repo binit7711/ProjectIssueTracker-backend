@@ -1,4 +1,4 @@
-﻿namespace ProjectIssueTracker.Dtos
+﻿namespace ProjectIssueTracker.Dtos.ResponseDtos
 {
     public class UserDto
     {

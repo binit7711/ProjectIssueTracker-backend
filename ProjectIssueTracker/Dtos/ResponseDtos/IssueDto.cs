@@ -1,4 +1,4 @@
-﻿namespace ProjectIssueTracker.Dtos
+﻿namespace ProjectIssueTracker.Dtos.ResponseDtos
 {
     public class IssueDto
     {
@@ -10,7 +10,7 @@
         public string CreatorName { get; set; }
         public string CreatorEmail { get; set; }
         public int ProjectId { get; set; }
-        public List<CommentDto> Comments{ get; set; }
+        public List<CommentDto> Comments { get; set; }
     }
 
     public enum Status
