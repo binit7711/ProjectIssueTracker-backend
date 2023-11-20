@@ -35,9 +35,11 @@ namespace ProjectIssueTracker.Services
         {
 
             var result = await _dbContext.Projects
-                .Include(p=>p.Issues)
+                .Include(p => p.Issues)
+                .AsSplitQuery()
                 .Include(p => p.Owner)
                 .Where(p => p.OwnerId == userId)
+                .OrderBy(p => p.Name)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -22,12 +23,16 @@ namespace ProjectIssueTracker.Controllers
 
         private readonly IConfiguration _config;
         private readonly IMapper _mapper;
+        private readonly IWebHostEnvironment _env;
+        private readonly string _imageDirectory;
 
-        public AuthController(ApiDBContext context, IConfiguration config, IMapper mapper)
+        public AuthController(ApiDBContext context, IConfiguration config, IMapper mapper, IWebHostEnvironment env)
         {
             _context = context;
             _config = config;
             _mapper = mapper;
+            _env = env;
+            _imageDirectory = env.WebRootPath + @"\Images";
         }
         [HttpPost("login")]
         public IActionResult Login(UserLoginDto userLoginDto)
@@ -73,6 +78,23 @@ namespace ProjectIssueTracker.Controllers
             return Ok(new { user = _mapper.Map<UserDto>(CreatedUser), token });
         }
 
+        [HttpPost("image-upload")]
+        [Authorize]
+        public async Task<IActionResult> Upload(IFormFile file,[FromForm]string email)
+        {
+            
+            var filePath = $"{_imageDirectory}//{file.FileName}";
+
+            if (!Directory.Exists(_imageDirectory))
+            {
+                Directory.CreateDirectory(_imageDirectory);
+            }
+            using (var stream = System.IO.File.Create(filePath))
+            {
+                await file.CopyToAsync(stream);
+            }
+            return Ok(new { filePath });
+        }
         private string GenerateToken(User user)
         {
             List<Claim> claims = new()

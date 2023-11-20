@@ -28,7 +28,7 @@ public class IssueHub : Hub<IIssueHub>
 
     public override async Task OnConnectedAsync()
     {
-        var userId = Context.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        var userId = Context.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value!;
 
         var issues = _dbContext.Issues
             .Where(i => i.CreatorId == int.Parse(userId))
@@ -40,7 +40,6 @@ public class IssueHub : Hub<IIssueHub>
         {
             _issueHubService.AddUser(connectionId, new UserInfo { UserId = userId, SubscribedIssues = issues });
         }
-        //await Clients.All.IssueUpdate("Someone just joined");
 
         await base.OnConnectedAsync();
     }

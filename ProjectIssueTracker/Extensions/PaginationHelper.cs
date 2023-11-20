@@ -1,6 +1,6 @@
 ﻿namespace ProjectIssueTracker.Extensions
 {
-    public class PaginatedResult<TEntity>
+    public class PaginatedResult<TEntity> 
     {
         public IEnumerable<TEntity> Items { get; set; }
         public int TotalCount { get; set; }

@@ -4,6 +4,7 @@ using ProjectIssueTracker.Data;
 using ProjectIssueTracker.Dtos.RequestDtos;
 using ProjectIssueTracker.Dtos.ResponseDtos;
 using ProjectIssueTracker.Extensions;
+using ProjectIssueTracker.Mappings;
 using ProjectIssueTracker.Models;
 
 namespace ProjectIssueTracker.Services
@@ -46,7 +47,7 @@ namespace ProjectIssueTracker.Services
                     .Where(i => i.ProjectId == projectId)
                     .Include(i => i.Creator)
                     .AsQueryable()
-                    .OrderBy(i=>i.Id)
+                    .OrderBy(i => i.Id)
                     .Paginate(pageNumber, pageSize)
                     .Items
                     .ToList();
@@ -58,13 +59,14 @@ namespace ProjectIssueTracker.Services
         {
             var result = _context.Issues
                 .Include(i => i.Project)
+                .AsSplitQuery()
                 .Include(i => i.Creator)
                 .Where(i => i.CreatorId == userId)
-                .OrderBy(i=>i.Id)
+                .OrderBy(i => i.Id)
                 .Paginate(pageNumber, pageSize);
 
             return Task.FromResult(result);
-            
+
         }
 
         public async Task<IssueDto?> UpdateIssue(int issueId, IssueCreateDto issueUpdateDto)

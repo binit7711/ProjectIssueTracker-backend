@@ -92,7 +92,7 @@ namespace ProjectIssueTracker
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials()
-                
+
                 );
             });
 
@@ -116,7 +116,7 @@ namespace ProjectIssueTracker
 
 
             app.UseCors("CorsPolicy");
-
+            app.UseStaticFiles();
             app.UseHttpsRedirection();
 
 
